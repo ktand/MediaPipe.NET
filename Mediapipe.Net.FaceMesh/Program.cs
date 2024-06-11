@@ -22,107 +22,114 @@ namespace MediapipeNet2
     {
         private readonly VideoCapture _capture;
         private readonly Window _window;
+        private readonly Mat _inputMat = new Mat();
         private readonly CalculatorGraph _graph;
+        private readonly OutputStreamPoller<bool> _presencePoller;
         private readonly OutputStreamPoller<List<NormalizedLandmarkList>> _landmarkPoller;
-        private readonly Mat _inputMat;
-        private readonly Mat _outputMat;
+        private Point _upperLipPoint = new Point();
+        private Point _lowerLipPoint = new Point();
 
         public VideoProcessor()
         {
             _capture = new VideoCapture(2);
             _capture.FrameWidth = 1280;
             _capture.FrameHeight = 720;
+            _capture.Fps = 10;
             _window = new Window("Video Face Mesh");
-
             _graph = new CalculatorGraph(File.ReadAllText(@"face_mesh_desktop_live.pbtxt"));
+            _presencePoller = _graph.AddOutputStreamPoller<bool>("landmark_presence");
             _landmarkPoller = _graph.AddOutputStreamPoller<List<NormalizedLandmarkList>>("multi_face_landmarks");
             _graph.StartRun();
-            _inputMat = _outputMat = new Mat();
         }
 
         public void ProcessVideo()
         {
             while (true)
             {
-                _capture.Read(_inputMat);
-
-                if (_inputMat.Empty())
+                if (!_capture.Read(_inputMat))
                 {
                     Console.WriteLine("Failed to capture a frame.");
                     break;
                 }
 
-                ReadOnlySpan<byte> imageData = MatToReadOnlySpan(_inputMat);
-                using (var imageFrame = new ImageFrame(
+                using (ImageFrame imageFrame = new ImageFrame(
                     ImageFormat.Types.Format.Srgb,
                     _inputMat.Width,
                     _inputMat.Height,
                     _inputMat.Width * _inputMat.Channels(),
-                    imageData
-                ))
+                    MatToReadOnlySpan(_inputMat)))
                 {
                     long frameTimestampUs = (long)(Cv2.GetTickCount() / Cv2.GetTickFrequency() * 1e6);
                     _graph.AddPacketToInputStream("input_video", Packet.CreateImageFrameAt(imageFrame, frameTimestampUs));
-                    Packet<List<NormalizedLandmarkList>> pOutputLandmark = new Packet<List<NormalizedLandmarkList>>();
-                    if (!_landmarkPoller.Next(pOutputLandmark))
+
+                    using (Packet<bool> pOutputPresence = new Packet<bool>())
                     {
-                        break;
+                        if (_presencePoller.QueueSize() <= 0 || !_presencePoller.Next(pOutputPresence) || !pOutputPresence.Get()) continue;
                     }
-                    var outputLandmark = pOutputLandmark.Get(NormalizedLandmarkList.Parser);
 
-                    int index = 1;
-                    outputLandmark.ForEach((l) =>
+                    using (Packet<List<NormalizedLandmarkList>> pOutputLandmark = new Packet<List<NormalizedLandmarkList>>())
                     {
-                        NormalizedLandmark upperLip = l.Landmark[13];
-                        NormalizedLandmark lowerLip = l.Landmark[14];
-                        double lipDistancePixels = Math.Abs(upperLip.Y - lowerLip.Y);
+                        if (_landmarkPoller.QueueSize() <= 0 || !_landmarkPoller.Next(pOutputLandmark) || pOutputLandmark == null) continue;
 
-                        NormalizedLandmark leftEyeCorner = l.Landmark[159];
-                        NormalizedLandmark rightEyeCorner = l.Landmark[386];
-                        double distancePixels = Math.Sqrt(Math.Pow(leftEyeCorner.X - rightEyeCorner.X, 2) + Math.Pow(leftEyeCorner.Y - rightEyeCorner.Y, 2));
-
-                        // double initialThreshold = 0.01;
-                        double averageFaceSizeCm = 20.0;
-                        double averageFaceSizePixels = 300.0;
-
-                        double distanceCm = (averageFaceSizeCm * averageFaceSizePixels) / distancePixels;
-                        double threshold = (130 - (distanceCm / 5000)) * (0.001f / (distanceCm / 5000));
-
-                        if (lipDistancePixels > threshold)
+                        List<NormalizedLandmarkList> _listLandmarks = pOutputLandmark.Get(NormalizedLandmarkList.Parser);
+                        for (byte i = 0; i < _listLandmarks.Count; i++)
                         {
-                            _outputMat.PutText($"- OPEN ({index} - {lipDistancePixels} | {threshold})", new Point(upperLip.X * _outputMat.Width, upperLip.Y * _outputMat.Height - 60), HersheyFonts.HersheySimplex, 0.7, Scalar.Violet, 2);
+                            NormalizedLandmark upperLip = _listLandmarks[i].Landmark[13];
+                            NormalizedLandmark lowerLip = _listLandmarks[i].Landmark[14];
+                            double dxl = lowerLip.X - upperLip.X;
+                            double dyl = lowerLip.Y - upperLip.Y;
+                            double dzl = lowerLip.Z - upperLip.Z;
+                            double lipDistancePixels = Math.Sqrt(dxl * dxl + dyl * dyl + dzl * dzl);
+
+                            NormalizedLandmark leftEyeCorner = _listLandmarks[i].Landmark[159];
+                            NormalizedLandmark rightEyeCorner = _listLandmarks[i].Landmark[386];
+                            double dxe = leftEyeCorner.X - rightEyeCorner.X;
+                            double dye = leftEyeCorner.Y - rightEyeCorner.Y;
+                            double dze = leftEyeCorner.Z - rightEyeCorner.Z;
+                            double distancePixels = Math.Sqrt(dxe * dxe + dye * dye + dze * dze);
+
+                            double averageFaceSizeCm = 20.0;
+                            double averageFaceSizePixels = 300.0;
+
+                            double distanceCm = (averageFaceSizeCm * averageFaceSizePixels) / distancePixels;
+                            double threshold = (130 - (distanceCm / 13000)) * (0.001f / (distanceCm / 13000));
+                            int thresholdInt = (int)(threshold * 100000);
+                            int lipDistanceInt = (int)(lipDistancePixels * 100000);
+
+                            if (lipDistancePixels > threshold)
+                            {
+                                _inputMat.PutText($"- OPEN {lipDistanceInt}>{thresholdInt}", new Point(upperLip.X * _inputMat.Width, upperLip.Y * _inputMat.Height - 60), HersheyFonts.HersheySimplex, 1, Scalar.LightGreen, 3);
+                            }
+                            else
+                            {
+                                _inputMat.PutText($"- CLOSE {lipDistanceInt}>{thresholdInt}", new Point(upperLip.X * _inputMat.Width, upperLip.Y * _inputMat.Height - 60), HersheyFonts.HersheySimplex, 1, Scalar.LightGray, 3);
+                            }
+                            _upperLipPoint.X = (int)(upperLip.X * _inputMat.Width);
+                            _upperLipPoint.Y = (int)(upperLip.Y * _inputMat.Height);
+                            _lowerLipPoint.X = (int)(lowerLip.X * _inputMat.Width);
+                            _lowerLipPoint.Y = (int)(lowerLip.Y * _inputMat.Height);
+                            _inputMat.Rectangle(_upperLipPoint, new Point(_upperLipPoint.X + 2, _upperLipPoint.Y + 2), Scalar.Red);
+                            _inputMat.Rectangle(_lowerLipPoint, new Point(_lowerLipPoint.X + 2, _lowerLipPoint.Y + 2), Scalar.Blue);
                         }
-                        else
-                        {
-                            _outputMat.PutText($"- CLOSE ({index} - {lipDistancePixels} | {threshold})", new Point(upperLip.X * _outputMat.Width, upperLip.Y * _outputMat.Height - 60), HersheyFonts.HersheySimplex, 0.7, Scalar.Blue, 2);
-                        }
-                        _outputMat.Circle(new Point(upperLip.X * _outputMat.Width, upperLip.Y * _outputMat.Height), 1, Scalar.Red, 1);
-                        _outputMat.Circle(new Point(lowerLip.X * _outputMat.Width, lowerLip.Y * _outputMat.Height), 1, Scalar.Green, 1);
-                        index++;
-                    });
-                    _window.ShowImage(_outputMat);
+                    }
                 }
-
+                _window.ShowImage(_inputMat);
                 int key = Cv2.WaitKey(1);
                 if (key == 27)
                     break;
             }
         }
 
-        private unsafe ReadOnlySpan<byte> MatToReadOnlySpan(Mat mat)
+        static private unsafe ReadOnlySpan<byte> MatToReadOnlySpan(Mat mat)
         {
             byte* ptr = (byte*)mat.Data.ToPointer();
             return new ReadOnlySpan<byte>(ptr, mat.Width * mat.Height * mat.Channels());
         }
-        
+
         public void Dispose()
         {
-            _inputMat.Dispose();
-            _outputMat.Dispose();
             _capture.Release();
             _window.Dispose();
-            _graph.CloseAllPacketSources();
-            _graph.WaitUntilDone();
             _graph.Dispose();
         }
     }
