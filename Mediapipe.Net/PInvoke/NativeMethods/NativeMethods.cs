@@ -12,6 +12,6 @@ namespace Mediapipe.PInvoke.Native
         /// <summary>
         /// Name of the mediapipe shared library.
         /// </summary>
-        internal const string MediaPipeLibrary = "mediapipe_c";
+        internal const string MediaPipeLibrary = "lib\\x64\\mediapipe_c";
     }
 }

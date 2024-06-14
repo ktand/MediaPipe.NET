@@ -31,7 +31,7 @@ namespace MediapipeNet2
 
         public VideoProcessor()
         {
-            _capture = new VideoCapture(2);
+            _capture = new VideoCapture(5);
             _capture.FrameWidth = 1280;
             _capture.FrameHeight = 720;
             _capture.Fps = 10;

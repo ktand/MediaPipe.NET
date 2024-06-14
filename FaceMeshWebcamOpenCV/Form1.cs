@@ -15,7 +15,7 @@ namespace FaceMeshWebcamOpenCV
 {
     public partial class Form1 : Form
     {
-        private VideoCapture _capture = new VideoCapture(0);
+        private VideoCapture _capture = new VideoCapture(5);
         Thread thread;
         
         public Form1()
@@ -65,15 +65,6 @@ namespace FaceMeshWebcamOpenCV
                 {
                     break;
                 }
-                myTask = Task.Run(() =>
-                {
-                    Packet<List<NormalizedLandmarkList>> pOutputLandmark = new Packet<List<NormalizedLandmarkList>>();
-                    if (landmarkPoller.Next(pOutputLandmark))
-                    {
-                        Console.WriteLine("DDDD");
-                    }
-                });
-                myTask.Dispose();
 
 
                 /*                var task = poller.WaitNextAsync();

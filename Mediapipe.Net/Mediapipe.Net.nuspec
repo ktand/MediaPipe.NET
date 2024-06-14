@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>MediaPipe.Net.kaymyst</id>
+    <version>$version$</version>
+    <title>MediaPipe.Net.kaymyst</title>
+    <authors>kaymyst</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <readme>docs\README.md</readme>
+	<projectUrl>https://github.com/kaymyst/MediaPipe.NET</projectUrl>
+    <description>media pipe in .net framework</description>
+    <releaseNotes>First release.</releaseNotes>
+    <copyright>$copyright$</copyright>
+    <tags>Mediapipe Tag2</tags>
+	
+  </metadata>
+  <files>
+    <file src="..\README.md" target="docs\" />
+  </files>
+</package>
