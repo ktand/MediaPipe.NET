@@ -416,17 +416,6 @@ namespace Mediapipe.Framework
       return proto;
     }
 
-    public static List<NormalizedLandmarkList> Get(this Packet<List<NormalizedLandmarkList>> packet)
-    {
-        UnsafeNativeMethods.mp_Packet__GetNormalizedLandmarkListVector(packet.mpPtr, out var serializedProto).Assert();
-        GC.KeepAlive(packet);
-
-        var normalizedLandmarkList = serializedProto.Deserialize(NormalizedLandmarkList.Parser);
-        serializedProto.Dispose();
-
-        return normalizedLandmarkList;
-    }
-
     [Obsolete("Use Get instead")]
     public static T GetProto<T>(this Packet<T> packet, MessageParser<T> parser) where T : IMessage<T> => Get(packet, parser);
 
@@ -439,13 +428,16 @@ namespace Mediapipe.Framework
     /// <exception cref="MediaPipeException">
     ///   If the <see cref="Packet"/> doesn't contain a proto message list.
     /// </exception>
-    public static List<NormalizedLandmarkList> Get<T>(this Packet<List<NormalizedLandmarkList>> packet, MessageParser<T> parser) where T : IMessage<T>
+    public static List<T> Get<T>(this Packet<List<T>> packet, MessageParser<T> parser) where T : IMessage<T>
     {
-      return Get(packet);
+      var value = new List<T>();
+      Get(packet, parser, value);
+
+      return value;
     }
 
     [Obsolete("Use Get instead")]
-    public static List<NormalizedLandmarkList> GetProtoList<T>(this Packet<List<NormalizedLandmarkList>> packet, MessageParser<T> parser) where T : IMessage<T> => Get(packet, parser);
+    public static List<T> GetProtoList<T>(this Packet<List<T>> packet, MessageParser<T> parser) where T : IMessage<T> => Get(packet, parser);
 
     /// <summary>
     ///   Get the content of the <see cref="Packet"/> as a proto message list.
