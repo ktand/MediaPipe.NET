@@ -15,24 +15,22 @@ on:
 jobs:
   publish:
     name: Publish
-    runs-on: ${{ inputs.runner }}
+    runs-on: windows-2019
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1.7.2
-        with:
-          dotnet-version: '6.0.x'
+        uses: actions/checkout@v4
 
       - name: Build
         run: |
-          dotnet publish ${{ inputs.path }} --nologo -c Release -o ./output -r ${{ inputs.runtime }} --self-contained true -p:Version=${{ github.ref_name }}
-          7z a -tzip ${{ inputs.runtime }}.zip output/*
+          cd .\Mediapipe.Net\Mediapipe.Net\          
+          dotnet build .\Mediapipe.Net.csproj
+          nuget.exe pack .\Mediapipe.Net.csproj -symbols
+          nuget push *.nupkg ${{secrets.NUGET_TOKEN}} -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+          7z a -tzip output.zip bin/debug/*
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.ref_name }}-${{ inputs.runtime }}
-          path: ${{ github.workspace }}/${{ inputs.runtime }}.zip
+          name: ${{ github.ref_name }}-output
+          path: ${{ github.workspace }}/output.zip
           retention-days: 1
