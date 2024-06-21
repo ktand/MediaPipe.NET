@@ -15,6 +15,7 @@ jobs:
 
       - name: Build
         run: |
+          nuget restore
           cd .\Mediapipe.Net\  
           dotnet build .\Mediapipe.Net.csproj
           nuget.exe pack .\Mediapipe.Net.csproj -symbols
