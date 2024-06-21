@@ -15,7 +15,7 @@ jobs:
 
       - name: Build
         run: |
-          cd .\Mediapipe.Net\Mediapipe.Net\          
+          cd .\Mediapipe.Net\  
           dotnet build .\Mediapipe.Net.csproj
           nuget.exe pack .\Mediapipe.Net.csproj -symbols
           nuget push *.nupkg ${{secrets.NUGET_TOKEN}} -Source https://api.nuget.org/v3/index.json -SkipDuplicate
