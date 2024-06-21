@@ -1,15 +1,8 @@
 name: Publish
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       runner:
-        required: true
-        type: string
-      runtime:
-        required: true
-        type: string
-      path:
-        required: true
         type: string
 
 jobs:
