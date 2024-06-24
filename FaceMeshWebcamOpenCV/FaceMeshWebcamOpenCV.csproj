@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.7\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props" Condition="Exists('..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.7\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props')" />
+  <Import Project="..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.8\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props" Condition="Exists('..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.8\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props')" />
   <Import Project="..\packages\OpenCvSharp4.runtime.win.4.9.0.20240103\build\net48\OpenCvSharp4.runtime.win.props" Condition="Exists('..\packages\OpenCvSharp4.runtime.win.4.9.0.20240103\build\net48\OpenCvSharp4.runtime.win.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -64,8 +64,8 @@
     <Reference Include="Google.Protobuf, Version=3.26.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Protobuf.3.26.1\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
-    <Reference Include="Mediapipe.Net, Version=1.0.7.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\MediaPipe.Net.kaymyst.1.0.7\lib\net48\Mediapipe.Net.dll</HintPath>
+    <Reference Include="Mediapipe.Net, Version=1.0.11.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\MediaPipe.Net.kaymyst.1.0.11\lib\net48\Mediapipe.Net.dll</HintPath>
     </Reference>
     <Reference Include="OpenCvSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6adad1e807fea099, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenCvSharp4.4.9.0.20240103\lib\net48\OpenCvSharp.dll</HintPath>
@@ -151,15 +151,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="lib\x64\mediapipe_c.dll" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\OpenCvSharp4.runtime.win.4.9.0.20240103\build\net48\OpenCvSharp4.runtime.win.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCvSharp4.runtime.win.4.9.0.20240103\build\net48\OpenCvSharp4.runtime.win.props'))" />
-    <Error Condition="!Exists('..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.7\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.7\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props'))" />
+    <Error Condition="!Exists('..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.8\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Mediapipe.Net.Runtime.CPU.kaymyst.1.0.8\build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props'))" />
   </Target>
 </Project>
